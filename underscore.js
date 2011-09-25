@@ -948,7 +948,7 @@
 
   // Is a given value a constructor?
   _.isConstructor = function(obj) {
-    return (_.isFunction(obj) && ('name' in obj));
+    return (_.isFunction(obj) && obj.name);
   };
 
   // Returns the class constructor (function return type) using a string, keypath or constructor.
