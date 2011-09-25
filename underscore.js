@@ -890,6 +890,9 @@
     if ((!a && b) || (a && !b)) return false;
     // Either one is undefined
     if ((a === void 0) || (b === void 0)) return false;
+    // Unwrap any wrapped objects.
+    if (a._chain) a = a._wrapped;
+    if (b._chain) b = b._wrapped;
     // One of them implements an isEqual()?
     if (a.isEqual) return a.isEqual(b);
     if (b.isEqual) return b.isEqual(a);
@@ -898,9 +901,6 @@
     if (atype != btype) return false;
     // Basic equality test (watch out for coercions).
     if (a == b) return true;
-    // Unwrap any wrapped objects.
-    if (a._chain) a = a._wrapped;
-    if (b._chain) b = b._wrapped;
     // Check dates' integer values.
     if (_.isDate(a) && _.isDate(b)) return a.getTime() === b.getTime();
     // Both are NaN?
