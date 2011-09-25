@@ -338,9 +338,9 @@
   };
 
   // Deduces the type of ownership of an item and if available, it retains it (reference counted) or clones it.
-  // Options: 
-  //    properties - used to disambigate between owning an object and owning each property.
-  //    clone - used to disambigate between owning a collection's items and cloning a collection.
+  // <br />**Options:**<br />
+  // * `properties` - used to disambigate between owning an object and owning each property.<br />
+  // * `clone` - used to disambigate between owning a collection's items and cloning a collection.
   _.own = function(obj, options) {
     if (!obj) return obj;
     options || (options = {});
@@ -357,10 +357,10 @@
     return obj;
   };
 
-  // Deduces the type of ownership of an item and if available, it releases it (reference counted) or destroys it.  
-  // Options: 
-  //    properties - used to disambigate between owning an object and owning each property.
-  //    clear - used to disambigate between clearing disowned items and removing them (by default, they are removed).
+  // Deduces the type of ownership of an item and if available, it releases it (reference counted) or destroys it.
+  // <br />**Options:**<br /> 
+  // * `properties` - used to disambigate between owning an object and owning each property.<br />
+  // * `clear` - used to disambigate between clearing disowned items and removing them (by default, they are removed).
   _.disown = function(obj, options) {
     if (!obj) return obj;
     options || (options = {});
@@ -381,13 +381,13 @@
   // If the matcher is a function, it removes and returns all values that match. 
   // If the matcher is an array, it removes and returns all values that match. 
   // If the matcher is undefined, it removes and returns all values.
-  // If the collection is an object and the matcher is a key, it removes and return the value for that key (unless the is_value option is provided).
+  // If the collection is an object and the matcher is a key, it removes and return the value for that key (unless the 'is\_value' option is provided).
   // Otherwise, it removes and return the value if it finds it.
-  // Options: 
-  //    callback - if you provide a callback, it calls it with the removed value after the value is removed from the collection. Note: if the options are a function, it is set as the callback.
-  //    is_value - used to disambigate between a key or value when removing from a collection that is an object.
-  //    first_only - if you provide a first_only flag, it will stop looking for an value when it finds one that matches.  
-  //    preclear - if you provide a preclear flag, it will clone the passed object, remove all the values, and then remove from the cloned object. 
+  // <br />**Options:**<br /> 
+  // * `callback` - if you provide a callback, it calls it with the removed value after the value is removed from the collection. Note: if the options are a function, it is set as the callback.<br />
+  // * `is_value` - used to disambigate between a key or value when removing from a collection that is an object.<br />
+  // * `first_only` - if you provide a first_only flag, it will stop looking for an value when it finds one that matches.<br />
+  // * `preclear` - if you provide a preclear flag, it will clone the passed object, remove all the values, and then remove from the cloned object.
   _.remove = function(obj, matcher, options) {
     if (_.isEmpty(obj)) return (!matcher || _.isFunction(matcher)) ? [] : undefined;
     options || (options = {});
@@ -478,7 +478,7 @@
     
       // Object: remove and return all values by key or by value
       else if (_.isArray(matcher)) {
-        // the matcher array contains values (returns: object with keys and values)
+        // The matcher array contains values (returns: object with keys and values)
         if (options.is_value) {
           var matcher_value;
           for (var i = 0, l = matcher.length; i < l; i++) {
@@ -487,7 +487,7 @@
             else { for (key in obj) { if (matcher_value===obj[key]) { removed.push(key); } } }
           }
         }
-        // the matcher array contains keys (returns: array of values)
+        // The matcher array contains keys (returns: array of values)
         else {
           ordered_keys = matcher;
           var matcher_key;
@@ -955,7 +955,6 @@
   _.resolveConstructor = function(key) {
     var keypath_components = _.isArray(key) ? key : (_.isString(key) ? key.split('.') : undefined);
 
-    // resolve a keypath
     if (keypath_components) { 
       var constructor = (keypath_components.length===1) ? window[keypath_components[0]] : _.keypathValue(window, keypath_components);
       return (constructor && _.isConstructor(constructor)) ? constructor : undefined;
@@ -968,7 +967,7 @@
 
   // Determines whether a conversion is possible checking typeof, instanceof, is{SomeType}(), to{SomeType}() using a string, keypath or constructor..
   // Convention for is{SomeType}(), to{SomeType}() with namespaced classes is to remove the namespace (like Javascript does).
-  // Note: if you pass a constructor, the constructor name may not exist so use a string if you are relying on is{SomeType}(), to{SomeType}().
+  // **Note: if you pass a constructor, the constructor name may not exist on the function so use a string if you are relying on is{SomeType}(), to{SomeType}().**
   _.CONVERT_NONE = 0;
   _.CONVERT_IS_TYPE = 1;
   _.CONVERT_TO_METHOD = 2;
@@ -1128,24 +1127,24 @@
   };
 
   // Deserialized an array of JSON objects or each object individually using the following conventions:
-  // 1) if JSON has a recognized type identifier (_type as default), it will try to create an instance.
+  // 1) if JSON has a recognized type identifier ('\_type' as default), it will try to create an instance.
   // 2) if the class refered to by the type identifier has a parseJSON function, it will try to create an instance.
-  // Options: 
-  //    type_field - the default is '_type' but you can choose any field name to trigger the search for a parseJSON function.
-  //    parse_properties - used to disambigate between owning a collection's items and cloning a collection.
+  // <br />**Options:**<br />
+  //* `type_field` - the default is '\_type' but you can choose any field name to trigger the search for a parseJSON function.<br />
+  //* `parse_properties` - used to disambigate between owning a collection's items and cloning a collection.
   _.parseJSON = function(obj, options) {
     var obj_type = typeof(obj);
 
-    // simple type
+    // Simple type - exit quickly
     if ((obj_type!=='object') && (obj_type!=='string')) return obj;
 
-    // the object is still a JSON string, convert to JSON
+    // The object is still a JSON string, convert to JSON
     if ((obj_type==='string') && obj.length && ((obj[0] === '{')||(obj[0] === '['))) {
       try { var obj_as_JSON = JSON.parse(obj); if (obj_as_JSON) obj = obj_as_JSON; } 
       catch (_e) {throw new TypeError("Unable to parse JSON: " + obj);}
     }
 
-    // parse an array
+    // Parse an array
     options || (options = {});
     if (_.isArray(obj)) {
       var result = [];
@@ -1153,18 +1152,18 @@
       return result;
     }
     
-    // parse the properties individually
+    // Parse the properties individually
     else if(options.parse_properties) {
       var result = {};
       each(obj, function(value, key) { result[key] = _.parseJSON(value, type_field); });
       return result;
     }
 
-    // no deseralization available
+    // No deseralization available
     var type_field = options.type_field ? options.type_field : '_type';    // Convention
     if (!(obj instanceof Object) || !obj.hasOwnProperty(type_field)) return obj;
 
-    // find and use the parseJSON function
+    // Find and use the parseJSON function
     var type = obj[type_field], parseJSON_owner = _.keypathValueOwner(window, type+'.parseJSON');
     if (!parseJSON_owner) throw new TypeError("Unable to find a parseJSON function for type: " + type);
     return parseJSON_owner.parseJSON(obj);
