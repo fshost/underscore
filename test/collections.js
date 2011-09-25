@@ -219,4 +219,256 @@ $(document).ready(function() {
     equals(_.size({one : 1, two : 2, three : 3}), 3, 'can compute the size of an object');
   });
 
+  test('collections: own and disown', function() {
+    var original, copy;
+
+    original = null;
+    copy = _.own(original);
+    ok(copy==null, 'no instance');
+    _.disown(original); _.disown(copy);
+
+    CloneDestroy = (function() {
+      CloneDestroy.clone_count = 0;
+      function CloneDestroy() { CloneDestroy.clone_count++; }
+      CloneDestroy.prototype.clone = function() { CloneDestroy.clone_count++; };
+      CloneDestroy.prototype.destroy = function() { CloneDestroy.clone_count--; };
+      return CloneDestroy;
+    })();
+
+    CloneDestroy.clone_count = 0; original = new CloneDestroy();
+    ok(CloneDestroy.clone_count==1, '1 instance');
+    copy = _.own(original);
+    ok(CloneDestroy.clone_count==2, '2 instances');
+    _.disown(original); _.disown(copy);
+    ok(CloneDestroy.clone_count==0, '0 instances');
+
+    CloneDestroy.clone_count = 0; original = [new CloneDestroy(), new CloneDestroy(), new CloneDestroy()];
+    ok(CloneDestroy.clone_count==3, '3 instances');
+    copy = _.own(original);
+    ok(copy===original, 'retained existing');
+    ok(CloneDestroy.clone_count==6, '6 instances');
+    _.disown(original); _.disown(copy);
+    ok(CloneDestroy.clone_count==0, '0 instances');
+
+    CloneDestroy.clone_count = 0; original = [new CloneDestroy(), new CloneDestroy(), new CloneDestroy()];
+    ok(CloneDestroy.clone_count==3, '3 instances');
+    copy = _.own(original, {clone:true});
+    ok(copy!==original, 'retained existing');
+    ok(CloneDestroy.clone_count==6, '6 instances');
+    _.disown(original); _.disown(copy);
+    ok(CloneDestroy.clone_count==0, '0 instances');
+
+    CloneDestroy.clone_count = 0; original = {one:new CloneDestroy(), two:new CloneDestroy(), three:new CloneDestroy()};
+    ok(CloneDestroy.clone_count==3, '3 instances');
+    copy = _.own(original, {properties:true});
+    ok(CloneDestroy.clone_count==6, '6 instances');
+    _.disown(original, {properties:true}); _.disown(copy, {properties:true});
+    ok(CloneDestroy.clone_count==0, '0 instances');
+
+    CloneDestroy.clone_count = 0; original = [new CloneDestroy(), new CloneDestroy(), new CloneDestroy()];
+    _.disown(original, {clear:true});
+    ok(original.length==3, '3 instances');
+
+    RetainRelease = (function() {
+      CloneDestroy.retain_count = 0;
+      function RetainRelease() { CloneDestroy.retain_count++; }
+      RetainRelease.prototype.retain = function() { CloneDestroy.retain_count++; };
+      RetainRelease.prototype.release = function() { CloneDestroy.retain_count--; };
+      return RetainRelease;
+    })();
+
+    CloneDestroy.clone_count = 0; original = new RetainRelease();
+    ok(CloneDestroy.retain_count==1, '1 instance');
+    copy = _.own(original);
+    ok(CloneDestroy.retain_count==2, '2 instances');
+    _.disown(original); _.disown(copy);
+    ok(CloneDestroy.retain_count==0, '0 instances');
+
+    CloneDestroy.retain_count = 0; original = [new RetainRelease(), new RetainRelease(), new RetainRelease()];
+    ok(CloneDestroy.retain_count==3, '3 instances');
+    copy = _.own(original);
+    ok(CloneDestroy.retain_count==6, '6 instances');
+    _.disown(original); _.disown(copy);
+    ok(CloneDestroy.retain_count==0, '0 instances');
+
+    CloneDestroy.retain_count = 0; original = {one:new RetainRelease(), two:new RetainRelease(), three:new RetainRelease()};
+    ok(CloneDestroy.retain_count==3, '3 instances');
+    copy = _.own(original, {properties:true});
+    ok(CloneDestroy.retain_count==6, '6 instances');
+    _.disown(original, {properties:true}); _.disown(copy, {properties:true});
+    ok(CloneDestroy.retain_count==0, '0 instances');
+
+    CloneDestroy.clone_count = 0; original = {one:new RetainRelease(), two:new RetainRelease(), three:new RetainRelease()};
+    _.disown(original, {properties:true, clear:true});
+    ok(_.size(original)==3, '3 instances');
+  });
+
+  test('collections: remove', function() {
+    var a, o, result;
+    var callback_count, callback = function() {callback_count++;}
+
+    a = [1,2,3,2,5]; callback_count = 0;
+    result = _.remove(a, 2, callback);
+    ok(result==2, '2 removed');
+    ok(_.isEqual(a,[1,3,5]), '[1,3,5] remaining');
+    ok(callback_count==2, '2 removed count');
+
+    a = [1,2,3,2,5]; callback_count = 0;
+    result = _.remove(a, 0, callback);
+    ok(!result, 'none removed');
+    ok(_.isEqual(a,[1,2,3,2,5]), '[1,2,3,2,5] remaining');
+    ok(callback_count==0, 'none removed count');
+
+    a = [1,2,2,4,5]; callback_count = 0;
+    result = _.remove(a, [2,5], {callback: callback});
+    ok(_.isEqual(result,[2,5]), '[2,5] removed');
+    ok(_.isEqual(a,[1,4]), '[1,3,4] remaining');
+    ok(callback_count==3, '[2,5] removed count');
+
+    a = [1,2,2,4,5]; callback_count = 0;
+    result = _.remove(a, [0], {callback: callback});
+    ok(_.isEqual(result,[]), 'none removed');
+    ok(_.isEqual(a,[1,2,2,4,5]), '[1,2,2,4,5] remaining');
+    ok(callback_count==0, 'none removed count');
+
+    a = [1,2,2,4,5]; callback_count = 0;
+    result = _.remove(a, [0,2], {callback: callback});
+    ok(_.isEqual(result,[2]), '[2] removed');
+    ok(_.isEqual(a,[1,4,5]), '[1,4,5] remaining');
+    ok(callback_count==2, '[2] removed count');
+
+    a = [1,2,3,4,5]; callback_count = 0;
+    result = _.remove(a, function(item) { return item % 2 == 0; }, callback);
+    ok(_.isEqual(result,[2,4]), '[2,4] removed');
+    ok(_.isEqual(a,[1,3,5]), '[1,3,5] remaining');
+    ok(callback_count==2, '[2,4] removed count');
+
+    a = [1,2,3,4,5]; callback_count = 0;
+    result = _.remove(a, function() { return false; }, callback);
+    ok(_.isEqual(result,[]), 'none removed');
+    ok(_.isEqual(a,[1,2,3,4,5]), '[1,3,5] remaining');
+    ok(callback_count==0, 'none removed count');
+
+    a = [1,2,3,4,5]; callback_count = 0;
+    result = _.remove(a, undefined, {callback: callback});
+    ok(_.isEqual(result,[1,2,3,4,5]), '[1,2,3,4,5] removed');
+    ok(_.isEqual(a,[]), '[] remaining');
+    ok(callback_count==5, '[1,2,3,4,5] removed count');
+
+    a = [1,2,3,2,5]; callback_count = 0;
+    result = _.remove(a, 2, {callback:callback,first_only:true});
+    ok(result==2, '2 removed');
+    ok(_.isEqual(a,[1,3,2,5]), '[1,3,2,5] remaining');
+    ok(callback_count==1, '2 removed count');
+
+    a = [1,2,3,2,5]; callback_count = 0;
+    result = _.remove(a, 0, {callback:callback,first_only:true});
+    ok(!result, 'none removed');
+    ok(_.isEqual(a,[1,2,3,2,5]), '[1,2,3,2,5] remaining');
+    ok(callback_count==0, 'none removed count');
+
+    a = [1,2,3,4,5]; callback_count = 0;
+    result = _.remove(a, [2,5], {callback: callback});
+    ok(_.isEqual(result,[2,5]), '[2,5] removed');
+    ok(_.isEqual(a,[1,3,4]), '[1,3,4] remaining');
+    ok(callback_count==2, '[2,5] removed count');
+
+    a = [1,2,5,4,5]; callback_count = 0;
+    var a_preclear_callback = function() { ok(_.isEqual(a,[]), 'cleared before remove'); callback_count++; }
+    result = _.remove(a, 2, {callback:a_preclear_callback, preclear:true});
+    ok(result==2, '2 removed');
+    ok(callback_count==1, '2 removed count');
+
+    o = {one:1,two:2,three:3,four:4,five:5}; callback_count = 0;
+    result = _.remove(o, 'two', callback);
+    ok(_.isEqual(result,{two:2}), '{two:2} removed');
+    ok(_.isEqual(o,{one:1,three:3,four:4,five:5}), '{one:1,three:3,four:4,five:5} remaining');
+    ok(callback_count==1, '{two:2} removed');
+
+    o = {one:1,two:2,three:3,four:4,five:5}; callback_count = 0;
+    result = _.remove(o, 'zero', callback);
+    ok(_.isEqual(result,{}), 'none removed');
+    ok(_.isEqual(o,{one:1,two:2,three:3,four:4,five:5}), '{one:1,two:2,three:3,four:4,five:5} remaining');
+    ok(callback_count==0, 'none removed');
+
+    o = {one:1,two:2,three:3,four:4,five:5}; callback_count = 0;
+    result = _.remove(o, 3, {is_item:true, callback: callback});
+    ok(_.isEqual(result,{three:3}), '{three:3} removed');
+    ok(_.isEqual(o,{one:1,two:2,four:4,five:5}), '{one:1,two:2,four:4,five:5} remaining');
+    ok(callback_count==1, '{three:3} removed');
+
+    o = {one:1,two:2,three:3,two_too:2,five:5}; callback_count = 0;
+    result = _.remove(o, 2, {callback:callback});
+    ok(_.isEqual(result,{two:2,two_too:2}), '{two:2,five:5} removed');
+    ok(_.isEqual(o,{one:1,three:3,five:5}), '{one:1,three:3,five:5} remaining');
+    ok(callback_count==2, '{two:2,two_too:2} removed count');
+
+    o = {one:1,two:2,three:3,four:4,five:5}; callback_count = 0;
+    result = _.remove(o, 0, {is_item:true, callback: callback});
+    ok(_.isEqual(result,{}), 'none removed');
+    ok(_.isEqual(o,{one:1,two:2,three:3,four:4,five:5}), '{one:1,two:2,three:3,four:4,five:5} remaining');
+    ok(callback_count==0, 'none removed');
+
+    o = {one:1,two:2,three:3,two_too:2,five:5}; callback_count = 0;
+    result = _.remove(o, ['two','five'], callback);
+    ok(_.isEqual(result,{two:2,five:5}), '{two:2,five:5} removed');
+    ok(_.isEqual(o,{one:1,three:3,two_too:2}), '{one:1,three:3,two_too:2} remaining');
+    ok(callback_count==2, '{two:2,five:5} removed count');
+
+    o = {one:1,two:2,three:3,two_too:2,five:5}; callback_count = 0;
+    result = _.remove(o, ['zero'], callback);
+    ok(_.isEqual(result,{}), 'none removed');
+    ok(_.isEqual(o,{one:1,two:2,three:3,two_too:2,five:5}), '{one:1,two:2,three:3,two_too:2,five:5} remaining');
+    ok(callback_count==0, 'none removed count');
+
+    o = {one:1,two:2,three:3,four:4,five:5}; callback_count = 0;
+    result = _.remove(o, [2,5], {callback:callback,is_item:true});
+    ok(_.isEqual(result,{two:2,five:5}), '{two:2,five:5} removed');
+    ok(_.isEqual(o,{one:1,three:3,four:4}), '{one:1,three:3,four:4} remaining');
+    ok(callback_count==2, '{two:2,five:5} removed count');
+
+    o = {one:1,two:2,three:3,two_too:2,five:5}; callback_count = 0;
+    result = _.remove(o, [2], {callback:callback,is_item:true});
+    ok(_.isEqual(result,{two:2,two_too:2}), '{two:2,two_too:2} removed');
+    ok(_.isEqual(o,{one:1,three:3,five:5}), '{one:1,three:3,five:5} remaining');
+    ok(callback_count==2, '{two:2,two_too:2} removed count');
+
+    o = {one:1,two:2,three:3,two_too:2,five:5}; callback_count = 0;
+    result = _.remove(o, [0], {callback:callback,is_item:true});
+    ok(_.isEqual(result,{}), 'none removed');
+    ok(_.isEqual(o,{one:1,two:2,three:3,two_too:2,five:5}), '{one:1,two:2,three:3,two_too:2,five:5} remaining');
+    ok(callback_count==0, 'none removed count');
+
+    o = {one:1,two:2,three:3,two_too:2,five:5}; callback_count = 0;
+    result = _.remove(o, [0,2], {callback:callback,is_item:true});
+    ok(_.isEqual(result,{two:2,two_too:2}), '{two:2,two_too:2} removed');
+    ok(_.isEqual(o,{one:1,three:3,five:5}), '{one:1,three:3,five:5} remaining');
+    ok(callback_count==2, 'none removed count');
+
+    o = {one:1,two:2,three:3,four:4,five:5}; callback_count = 0;
+    result = _.remove(o, function(value,key) { return value % 2 == 0; }, {callback: callback});
+    ok(_.isEqual(result,{two:2,four:4}), '{two:2,four:4} removed');
+    ok(_.isEqual(o,{one:1,three:3,five:5}), '{one:1,three:3,five:5} remaining');
+    ok(callback_count==2, '{two:2,four:4} removed count');
+
+    o = {one:1,two:2,three:3,four:4,five:5}; callback_count = 0;
+    result = _.remove(o, function() { return false; }, {callback: callback});
+    ok(_.isEqual(result,{}), 'none removed');
+    ok(_.isEqual(o,{one:1,two:2,three:3,four:4,five:5}), '{one:1,two:2,three:3,four:4,five:5} remaining');
+    ok(callback_count==0, 'none removed count');
+
+    o = {one:1,two:2,three:3,four:4,five:5}; callback_count = 0;
+    result = _.remove(o, undefined, callback);
+    ok(_.isEqual(result,{one:1,two:2,three:3,four:4,five:5}), '{one:1,two:2,three:3,four:4,five:5} removed');
+    ok(_.isEmpty(o), 'all removed');
+    ok(callback_count==5, '{one:1,two:2,three:3,four:4,five:5} removed count');
+
+    o = {one:1,two:2,three:3,four:4,five:5}; callback_count = 0;
+    var o_preclear_callback = function() { ok(_.isEqual(o,{}), 'cleared before remove'); callback_count++; }
+    result = _.remove(o, 'two', {callback:a_preclear_callback, preclear:true});
+    ok(_.isEqual(result,{two:2}), '{two:2} removed');
+    ok(_.isEqual(o,{}), '{} remaining');
+    ok(callback_count==1, '{two:2} removed');
+  });
+
 });
