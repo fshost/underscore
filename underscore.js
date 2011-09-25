@@ -1019,12 +1019,6 @@
     return _.functionExists(object, function_name) ? object[function_name].apply(object, slice.call(arguments, 2)) : undefined;
   };
 
-  // Get your super classes' constructor if it exists. Can be useful when dynamically updating a hierarchy.
-  _.getSuperConstructor = function(constructor) {
-    var value_owner = _.keypathValueOwner(constructor, ['__super__','constructor']);
-    return value_owner ? value_owner['constructor'] : undefined;
-  };
-
   // Get a specific super class function if it exists. Can be useful when dynamically updating a hierarchy.
   _.getSuperFunction = function(object, function_name) {
     var value_owner = _.keypathValueOwner(object, ['constructor','__super__',function_name]);
@@ -1033,7 +1027,7 @@
 
   // Call a specific super class function with trailing arguments if it exists. 
   _.superCall = function(object, function_name) {
-    return _.superApply(object, function_name, arguments.slice(2));
+    return _.superApply(object, function_name, slice.call(arguments, 2));
   };
 
   // Call a specific super class function with an arguments list if it exists. 
