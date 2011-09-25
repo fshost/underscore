@@ -417,7 +417,7 @@ $(document).ready(function() {
 
     o = {one:1,two:2,three:3,two_too:2,five:5}; callback_count = 0;
     result = _.remove(o, ['zero'], callback);
-    ok(_.isEqual(result,{}), 'none returned');
+    ok(_.isEqual(result,[]), 'none returned');
     ok(_.isEqual(o,{one:1,two:2,three:3,two_too:2,five:5}), '{one:1,two:2,three:3,two_too:2,five:5} remaining');
     ok(callback_count==0, 'none removed count');
 
