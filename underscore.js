@@ -376,18 +376,18 @@
     else if (obj.destroy) obj.destroy();
     return obj;
   };
-  
-  // Removes an item from a collection (array or object). 
-  // If the matcher is a function, it removes and returns all items that match. 
-  // If the matcher is an array, it removes and returns all items that match. 
-  // If the matcher is undefined, it removes and returns all items.
-  // If the collection is an object and the matcher is a key, it removes and return the item for that key (unless the is_item option is provided).
-  // Otherwise, it removes and return the item if it finds it.
+
+  // Removes an value from a collection (array or object). 
+  // If the matcher is a function, it removes and returns all values that match. 
+  // If the matcher is an array, it removes and returns all values that match. 
+  // If the matcher is undefined, it removes and returns all values.
+  // If the collection is an object and the matcher is a key, it removes and return the value for that key (unless the is_value option is provided).
+  // Otherwise, it removes and return the value if it finds it.
   // Options: 
-  //    callback - if you provide a callback, it calls it with the removed item after the item is removed from the collection. Note: if the options are a function, it is set as the callback.
-  //    is_item - used to disambigate between a key or item when removing from a collection that is an object.
-  //    first_only - if you provide a first_only flag, it will stop looking for an item when it finds one that matches.  
-  //    preclear - if you provide a preclear flag, it will clone the passed object, remove all the items, and then remove from the cloned object. 
+  //    callback - if you provide a callback, it calls it with the removed value after the value is removed from the collection. Note: if the options are a function, it is set as the callback.
+  //    is_value - used to disambigate between a key or value when removing from a collection that is an object.
+  //    first_only - if you provide a first_only flag, it will stop looking for an value when it finds one that matches.  
+  //    preclear - if you provide a preclear flag, it will clone the passed object, remove all the values, and then remove from the cloned object. 
   _.remove = function(obj, matcher, options) {
     if (_.isEmpty(obj)) return (!matcher || _.isFunction(matcher)) ? [] : undefined;
     options || (options = {});
@@ -401,65 +401,67 @@
       else { for(var key in original_object) delete original_object[key]; }
     }
 
-    var removed = [], item, single_value=false;
+    var removed = [];
     // Array collection
     if (_.isArray(obj)) {
-      // Array: remove and return all items (array return type)
+      var single_value=false;
+      // Array: remove and return all values (returns: array of values)
       if (_.isUndefined(matcher)) { removed = _.keys(obj); }
 
-      // Array: remove and return all items passing matcher function test (array return type) or if first_only option, only the first one (item or undefined return type)
+      // Array: remove and return all values passing matcher function test (returns: array of values) or if first_only option, only the first one (returns: value or undefined)
       else if (_.isFunction(matcher)) {
         if (options.first_only) { single_value=true; _.find(obj, function(value, index) { if (matcher(value)) { removed.push(index); return true; }; return false; }) }
         else { each(obj, function(value, index) { if (matcher(value)) { removed.push(index); } } ); } 
       } 
-      // Array: remove and return all items in the matcher array (array return type) or if first_only option, only the first one in matcher array (array return type)
+      // Array: remove and return all values in the matcher array (returns: array of values)
       else if (_.isArray(matcher)) {
         if (options.first_only) {
           single_value=true; 
-          var matcher_item, removed_index;
+          var matcher_value, removed_index;
           for (var i = matcher.length - 1; i >= 0; i--) {
-            matcher_item = matcher[i]; removed_index=-1;
-            _.find(obj, function(value, index) { if (matcher_item===value) { removed.push(index); return true; }; return false; })
+            matcher_value = matcher[i]; removed_index=-1;
+            _.find(obj, function(value, index) { if (matcher_value===value) { removed.push(index); return true; }; return false; })
           }
         }
         else { 
-          var matcher_item;
+          var matcher_value;
           for (var i = matcher.length - 1; i >= 0; i--) {
-            matcher_item = matcher[i];
-            each(obj, function(value, index) { if (matcher_item===value) { removed.push(index); } } ); 
+            matcher_value = matcher[i];
+            each(obj, function(value, index) { if (matcher_value===value) { removed.push(index); } } ); 
           }
         }
       }
-      // Array: remove all matching items (array return type) or if first_only option, only the first one (item or undefined return type).
+      // Array: remove all matching values (returns: array of values) or if first_only option, only the first one (returns: value or undefined).
       else {
         if (options.first_only) { single_value=true; var index = _.indexOf(obj, matcher); if (index>=0) removed.push(index); }
-        // Array: remove all matching items (array return type).
+        // Array: remove all matching values (array return type).
         else { single_value=true; each(obj, function(value, index) { if (matcher===value) { removed.push(index); } } ); } 
       } 
 
-      // Process the removed items if they exist
+      // Process the removed values if they exist
+      var value;
       if (single_value) {
         if (removed.length) {
-          var item_count = 0;
-          item = obj[removed[0]]; 
+          var value_count = 0;
+          value = obj[removed[0]]; 
           removed = removed.sort(function(left, right) { return _.compare(left, right); });
           while (removed.length) {
-            item_count++; obj.splice(removed.shift(), 1);
+            value_count++; obj.splice(removed.pop(), 1);
           }
-          if (options.callback) { while(item_count>0) { options.callback(item); item_count--; } }
-          return item;
+          if (options.callback) { while(value_count>0) { options.callback(value); value_count--; } }
+          return value;
         }
         else return undefined;
       }
       else {
         if (removed.length) {
-          var items = [], index;
+          var values = [], index;
           removed = removed.sort(function(left, right) { return _.compare(left, right); });
           while (removed.length) {
-            index = removed.shift(); items.unshift(obj[index]); obj.splice(index, 1);
+            index = removed.pop(); values.unshift(obj[index]); obj.splice(index, 1);
           }
-          if (options.callback) { each(items, function(item) { options.callback(item); } ) }
-          return _.uniq(items);
+          if (options.callback) { each(values, function(value) { options.callback(value); } ) }
+          return _.uniq(values);
         }
         else return [];
       }
@@ -467,26 +469,27 @@
 
     // Object collection 
     else {
-      var key;
-      // Object: remove all items (array return type)
+      var key, ordered_keys, single_value=false;
+      // Object: remove all values (returns: object with keys and values)
       if (_.isUndefined(matcher)) { removed = _.keys(obj); }
 
-      // Object: remove and return all items passing matcher function test (array return type)
+      // Object: remove and return all values passing matcher function test (returns: object with keys and values)
       else if (_.isFunction(matcher)) { for (key in obj) { if (matcher(obj[key], key)) removed.push(key); } } 
     
-      // Object: remove and return all items with keys in the matcher array (array return type) or all items in the matcher array (array return type)
+      // Object: remove and return all values by key or by value
       else if (_.isArray(matcher)) {
-        // the matcher array contains items 
-        if (options.is_item) {
-          var matcher_item;
+        // the matcher array contains values (returns: object with keys and values)
+        if (options.is_value) {
+          var matcher_value;
           for (var i = 0, l = matcher.length; i < l; i++) {
-            matcher_item = matcher[i];
-            if (options.first_only) { for (key in obj) { if (matcher_item===obj[key]) { removed.push(key); break; } } }
-            else { for (key in obj) { if (matcher_item===obj[key]) { removed.push(key); } } }
+            matcher_value = matcher[i];
+            if (options.first_only) { for (key in obj) { if (matcher_value===obj[key]) { removed.push(key); break; } } }
+            else { for (key in obj) { if (matcher_value===obj[key]) { removed.push(key); } } }
           }
         }
-        // the matcher array contains keys
+        // the matcher array contains keys (returns: array of values)
         else {
+          ordered_keys = matcher;
           var matcher_key;
           for (var i = 0, l = matcher.length; i < l; i++) {
             matcher_key = matcher[i];
@@ -494,25 +497,39 @@
           }
         }
       } 
-      // Object: remove item matching a key (item or undefined return type)
-      else if (_.isString(matcher) && !options.is_item) {
-        if (obj.hasOwnProperty(matcher)) removed.push(matcher);
+      // Object: remove value matching a key (value or undefined return type)
+      else if (_.isString(matcher) && !options.is_value) {
+        single_value = true; ordered_keys = [];
+        if (obj.hasOwnProperty(matcher)) { ordered_keys.push(matcher); removed.push(matcher) };
       } 
-      // Object: remove matching item (array return type)
+      // Object: remove matching value (array return type)
       else {
         for (key in obj) { if (matcher===obj[key]) { removed.push(key); } }
       } 
     
-      // Process the removed items if they exist
-      if (removed.length) {
-        var result = {};
-        while (removed.length) {
-          key = removed.shift(); result[key] = obj[key]; delete obj[key];
+      // Process the removed values if they exist
+      if (ordered_keys) {
+        if (ordered_keys.length) {
+          var result = [];
+          while (removed.length) {
+            key = removed.shift(); result.push(obj[key]); delete obj[key];
+          }
+          if (options.callback) { each(result, function(value, index) { options.callback(value, ordered_keys[index]); } ) }
+          return single_value ? result[0] : result;
         }
-        if (options.callback) { each(result, function(value, key) { options.callback(value, key); } ) }
-        return result;
+        else return single_value ? undefined : [];
       }
-      else return {};
+      else {
+        if (removed.length) {
+          var result = {};
+          while (removed.length) {
+            key = removed.shift(); result[key] = obj[key]; delete obj[key];
+          }
+          if (options.callback) { each(result, function(value, key) { options.callback(value, key); } ) }
+          return result;
+        }
+        else return {};
+      }
     }
   };
 
