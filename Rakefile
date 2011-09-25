@@ -18,3 +18,7 @@ task :doc do
   sh "docco underscore.js"
 end
 
+desc "run JavaScriptLint on the source"
+task :lint do
+  system "jsl -nofilelisting -nologo -conf docs/jsl.conf -process underscore.js"
+end

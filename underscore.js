@@ -300,12 +300,13 @@
     
     // Use a compare function, if one exists
     if (!function_name) function_name = 'compare';
+    var result;
     if (value_a[function_name] && _.isFunction(value_a[function_name])) {
-      var result = value_a[function_name](value_b);
+      result = value_a[function_name](value_b);
       return (result === 0) ? _.COMPARE_EQUAL : (result < 0) ? _.COMPARE_ASCENDING : _.COMPARE_DESCENDING;
     }
     else if (value_b[function_name] && _.isFunction(value_b[function_name])) {
-      var result = value_b[function_name](value_a);
+      result = value_b[function_name](value_a);
       return (result === 0) ? _.COMPARE_EQUAL : (result < 0) ? _.COMPARE_DESCENDING : _.COMPARE_ASCENDING;
     }
     return (value_a === value_b) ? _.COMPARE_EQUAL : (value_a < value_b) ? _.COMPARE_ASCENDING : _.COMPARE_DESCENDING;
@@ -345,11 +346,11 @@
     if (!obj) return obj;
     options || (options = {});
     if (_.isArray(obj)) {
-      if (options.clone) { var clone =  []; each(obj, function(value) { clone.push(_.own(value)); }); return clone; }
+      if (options.clone) { var a_clone =  []; each(obj, function(value) { a_clone.push(_.own(value)); }); return a_clone; }
       else { each(obj, function(value) { _.own(value); }); return obj; }
     }
     else if (options.properties) {
-      if (options.clone) { var clone = {}; each(obj, function(value, key) { clone[key] = _.own(value); }); return clone; }
+      if (options.clone) { var o_clone = {}; each(obj, function(value, key) { o_clone[key] = _.own(value); }); return o_clone; }
       else { each(obj, function(value, key) { _.own(value); }); return obj; }
     }
     else if (obj.retain) obj.retain();
@@ -394,38 +395,37 @@
     if (_.isFunction(options)) options = {callback:options};
 
     // Clone and clear the passed collection before removing. Useful if a callback uses the passed collection.
+    var key;
     if (options.preclear) { 
       var original_object = obj; 
       obj = _.clone(obj); 
       if (_.isArray(original_object)) { original_object.length=0; }
-      else { for(var key in original_object) delete original_object[key]; }
+      else { for(key in original_object) delete original_object[key]; }
     }
 
-    var removed = [];
+    var removed = [], matcher_value, i, l, single_value=false;
     // Array collection
     if (_.isArray(obj)) {
-      var single_value=false;
       // Array: remove and return all values (returns: array of values)
       if (_.isUndefined(matcher)) { removed = _.keys(obj); }
 
       // Array: remove and return all values passing matcher function test (returns: array of values) or if first_only option, only the first one (returns: value or undefined)
       else if (_.isFunction(matcher)) {
-        if (options.first_only) { single_value=true; _.find(obj, function(value, index) { if (matcher(value)) { removed.push(index); return true; }; return false; }) }
+        if (options.first_only) { single_value=true; _.find(obj, function(value, index) { if (matcher(value)) { removed.push(index); return true; } return false; }); }
         else { each(obj, function(value, index) { if (matcher(value)) { removed.push(index); } } ); } 
       } 
       // Array: remove and return all values in the matcher array (returns: array of values)
       else if (_.isArray(matcher)) {
         if (options.first_only) {
           single_value=true; 
-          var matcher_value, removed_index;
-          for (var i = matcher.length - 1; i >= 0; i--) {
+          var removed_index;
+          for (i = matcher.length - 1; i >= 0; i--) {
             matcher_value = matcher[i]; removed_index=-1;
-            _.find(obj, function(value, index) { if (matcher_value===value) { removed.push(index); return true; }; return false; })
+            _.find(obj, function(value, index) { if (matcher_value===value) { removed.push(index); return true; } return false; });
           }
         }
         else { 
-          var matcher_value;
-          for (var i = matcher.length - 1; i >= 0; i--) {
+          for (i = matcher.length - 1; i >= 0; i--) {
             matcher_value = matcher[i];
             each(obj, function(value, index) { if (matcher_value===value) { removed.push(index); } } ); 
           }
@@ -433,7 +433,7 @@
       }
       // Array: remove all matching values (returns: array of values) or if first_only option, only the first one (returns: value or undefined).
       else {
-        if (options.first_only) { single_value=true; var index = _.indexOf(obj, matcher); if (index>=0) removed.push(index); }
+        if (options.first_only) { single_value=true; i = _.indexOf(obj, matcher); if (i>=0) removed.push(i); }
         // Array: remove all matching values (array return type).
         else { single_value=true; each(obj, function(value, index) { if (matcher===value) { removed.push(index); } } ); } 
       } 
@@ -460,7 +460,7 @@
           while (removed.length) {
             index = removed.pop(); values.unshift(obj[index]); obj.splice(index, 1);
           }
-          if (options.callback) { each(values, function(value) { options.callback(value); } ) }
+          if (options.callback) { each(values, function(value) { options.callback(value); } ); }
           return _.uniq(values);
         }
         else return [];
@@ -469,7 +469,7 @@
 
     // Object collection 
     else {
-      var key, ordered_keys, single_value=false;
+      var ordered_keys;
       // Object: remove all values (returns: object with keys and values)
       if (_.isUndefined(matcher)) { removed = _.keys(obj); }
 
@@ -480,8 +480,7 @@
       else if (_.isArray(matcher)) {
         // The matcher array contains values (returns: object with keys and values)
         if (options.is_value) {
-          var matcher_value;
-          for (var i = 0, l = matcher.length; i < l; i++) {
+          for (i = 0, l = matcher.length; i < l; i++) {
             matcher_value = matcher[i];
             if (options.first_only) { for (key in obj) { if (matcher_value===obj[key]) { removed.push(key); break; } } }
             else { for (key in obj) { if (matcher_value===obj[key]) { removed.push(key); } } }
@@ -491,7 +490,7 @@
         else {
           ordered_keys = matcher;
           var matcher_key;
-          for (var i = 0, l = matcher.length; i < l; i++) {
+          for (i = 0, l = matcher.length; i < l; i++) {
             matcher_key = matcher[i];
             if (obj.hasOwnProperty(matcher_key)) { removed.push(matcher_key); }
           }
@@ -500,7 +499,7 @@
       // Object: remove value matching a key (value or undefined return type)
       else if (_.isString(matcher) && !options.is_value) {
         single_value = true; ordered_keys = [];
-        if (obj.hasOwnProperty(matcher)) { ordered_keys.push(matcher); removed.push(matcher) };
+        if (obj.hasOwnProperty(matcher)) { ordered_keys.push(matcher); removed.push(matcher); }
       } 
       // Object: remove matching value (array return type)
       else {
@@ -508,24 +507,25 @@
       } 
     
       // Process the removed values if they exist
+      var result;
       if (ordered_keys) {
         if (ordered_keys.length) {
-          var result = [];
+          result = [];
           while (removed.length) {
             key = removed.shift(); result.push(obj[key]); delete obj[key];
           }
-          if (options.callback) { each(result, function(value, index) { options.callback(value, ordered_keys[index]); } ) }
+          if (options.callback) { each(result, function(value, index) { options.callback(value, ordered_keys[index]); } ); }
           return single_value ? result[0] : result;
         }
         else return single_value ? undefined : [];
       }
       else {
         if (removed.length) {
-          var result = {};
+          result = {};
           while (removed.length) {
             key = removed.shift(); result[key] = obj[key]; delete obj[key];
           }
-          if (options.callback) { each(result, function(value, key) { options.callback(value, key); } ) }
+          if (options.callback) { each(result, function(value, key) { options.callback(value, key); } ); }
           return result;
         }
         else return {};
@@ -638,7 +638,7 @@
       return array[i] === item ? i : -1;
     }
     if (nativeIndexOf && array.indexOf === nativeIndexOf) return array.indexOf(item);
-    for (i = 0, l = array.length; i < l; i++) if (array[i] === item) return i;
+    for (i = 0, l = array.length; i < l; i++) { if (array[i] === item) return i; }
     return -1;
   };
 
@@ -648,13 +648,13 @@
     if (array == null) return -1;
     if (nativeLastIndexOf && array.lastIndexOf === nativeLastIndexOf) return array.lastIndexOf(item);
     var i = array.length;
-    while (i--) if (array[i] === item) return i;
+    while (i--) { if (array[i] === item) return i; }
     return -1;
   };
 
   // Finds an index of an item using a testing function.
   _.findIndex = function(array, fn) {
-    for (i = 0, l = array.length; i < l; i++) if (fn(array[i])) return i;
+    for (i = 0, l = array.length; i < l; i++) { if (fn(array[i])) return i; }
     return -1;
   };
 
@@ -804,7 +804,7 @@
   _.keys = nativeKeys || function(obj) {
     if (obj !== Object(obj)) throw new TypeError('Invalid object');
     var keys = [];
-    for (var key in obj) if (hasOwnProperty.call(obj, key)) keys[keys.length] = key;
+    for (var key in obj) { if (hasOwnProperty.call(obj, key)) keys[keys.length] = key; }
     return keys;
   };
 
@@ -942,7 +942,7 @@
     // Different object sizes?
     if (aKeys.length != bKeys.length) return false;
     // Recursive comparison of contents.
-    for (var key in a) if (!(key in b) || !_.isEqual(a[key], b[key])) return false;
+    for (var key in a) { if (!(key in b) || !_.isEqual(a[key], b[key])) return false; }
     return true;
   };
 
@@ -963,7 +963,7 @@
       return key;
     }
     return undefined;
-  }
+  };
 
   // Determines whether a conversion is possible checking typeof, instanceof, is{SomeType}(), to{SomeType}() using a string, keypath or constructor..
   // Convention for is{SomeType}(), to{SomeType}() with namespaced classes is to remove the namespace (like Javascript does).
@@ -1038,7 +1038,7 @@
   // Is a given array or object empty?
   _.isEmpty = function(obj) {
     if (_.isArray(obj) || _.isString(obj)) return obj.length === 0;
-    for (var key in obj) if (hasOwnProperty.call(obj, key)) return false;
+    for (var key in obj) { if (hasOwnProperty.call(obj, key)) return false; }
     return true;
   };
 
@@ -1114,14 +1114,22 @@
   
   // Convert an array of objects or an object to JSON using the convention that if an
   // object has a toJSON function, it will use it rather than the raw object.
-  _.toJSON = function(obj) {
+  // <br />**Options:**<br />
+  //* `properties` - used to disambigate between owning a collection's items and cloning a collection.
+  _.toJSON = function(obj, options) {
+    var result;
     if (_.isArray(obj)) {
-      var result = [];
+      result = [];
       each(obj, function(value) { result.push(_.toJSON(value)); });
       return result;
     }
-    else if ((obj instanceof Object) && obj.toJSON) {
-      return obj.toJSON();
+    else if (obj instanceof Object) {
+      if(obj.toJSON) return obj.toJSON();
+      else if(options && options.properties) {
+        result = {};
+        each(obj, function(value, key) { result[key] = _.toJSON(value); });
+        return result;
+      }
     }
     return obj;
   };
@@ -1131,7 +1139,7 @@
   // 2) if the class refered to by the type identifier has a parseJSON function, it will try to create an instance.
   // <br />**Options:**<br />
   //* `type_field` - the default is '\_type' but you can choose any field name to trigger the search for a parseJSON function.<br />
-  //* `parse_properties` - used to disambigate between owning a collection's items and cloning a collection.
+  //* `properties` - used to disambigate between owning a collection's items and cloning a collection.
   _.parseJSON = function(obj, options) {
     var obj_type = typeof(obj);
 
@@ -1145,22 +1153,22 @@
     }
 
     // Parse an array
-    options || (options = {});
+    var result;
     if (_.isArray(obj)) {
-      var result = [];
+      result = [];
       each(obj, function(value) { result.push(_.parseJSON(value, type_field)); });
       return result;
     }
     
     // Parse the properties individually
-    else if(options.parse_properties) {
-      var result = {};
+    else if(options && options.properties) {
+      result = {};
       each(obj, function(value, key) { result[key] = _.parseJSON(value, type_field); });
       return result;
     }
 
     // No deseralization available
-    var type_field = options.type_field ? options.type_field : '_type';    // Convention
+    var type_field = (options && options.type_field) ? options.type_field : '_type';    // Convention
     if (!(obj instanceof Object) || !obj.hasOwnProperty(type_field)) return obj;
 
     // Find and use the parseJSON function

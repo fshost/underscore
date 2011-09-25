@@ -24,7 +24,7 @@ $(document).ready(function() {
     return new Date(Date.UTC(obj.year, obj.month, obj.day, obj.hours, obj.minutes, obj.seconds))
   };
 
-  window.SomeNamespace || (window.SomeNamespace = {});;
+  window.SomeNamespace || (window.SomeNamespace = {});
   SomeNamespace.SomeClass = (function() {
     function SomeClass(int_value, string_value, date_value) { 
       this.int_value = int_value; 
@@ -146,7 +146,7 @@ $(document).ready(function() {
         seconds:date_value.getUTCSeconds()
       },
     };
-    result = _.parseJSON(embedded_objects, {parse_properties: true});
+    result = _.parseJSON(embedded_objects, {properties: true});
     ok(_.size(result)===3, 'serialized property count');
     ok(result.date_value1 instanceof Date, 'serialized object date 1 correct type');
     ok(result.date_value2 instanceof Date, 'serialized object date 2 correct type');

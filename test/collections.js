@@ -313,35 +313,35 @@ $(document).ready(function() {
     ok(original.length==3, '3 instances');
 
     RetainRelease = (function() {
-      CloneDestroy.retain_count = 0;
-      function RetainRelease() { CloneDestroy.retain_count++; }
-      RetainRelease.prototype.retain = function() { CloneDestroy.retain_count++; };
-      RetainRelease.prototype.release = function() { CloneDestroy.retain_count--; };
+      RetainRelease.retain_count = 0;
+      function RetainRelease() { RetainRelease.retain_count++; }
+      RetainRelease.prototype.retain = function() { RetainRelease.retain_count++; };
+      RetainRelease.prototype.release = function() { RetainRelease.retain_count--; };
       return RetainRelease;
     })();
 
-    CloneDestroy.clone_count = 0; original = new RetainRelease();
-    ok(CloneDestroy.retain_count==1, '1 instance');
+    RetainRelease.clone_count = 0; original = new RetainRelease();
+    ok(RetainRelease.retain_count==1, '1 instance');
     copy = _.own(original);
-    ok(CloneDestroy.retain_count==2, '2 instances');
+    ok(RetainRelease.retain_count==2, '2 instances');
     _.disown(original); _.disown(copy);
-    ok(CloneDestroy.retain_count==0, '0 instances');
+    ok(RetainRelease.retain_count==0, '0 instances');
 
-    CloneDestroy.retain_count = 0; original = [new RetainRelease(), new RetainRelease(), new RetainRelease()];
-    ok(CloneDestroy.retain_count==3, '3 instances');
+    RetainRelease.retain_count = 0; original = [new RetainRelease(), new RetainRelease(), new RetainRelease()];
+    ok(RetainRelease.retain_count==3, '3 instances');
     copy = _.own(original);
-    ok(CloneDestroy.retain_count==6, '6 instances');
+    ok(RetainRelease.retain_count==6, '6 instances');
     _.disown(original); _.disown(copy);
-    ok(CloneDestroy.retain_count==0, '0 instances');
+    ok(RetainRelease.retain_count==0, '0 instances');
 
-    CloneDestroy.retain_count = 0; original = {one:new RetainRelease(), two:new RetainRelease(), three:new RetainRelease()};
-    ok(CloneDestroy.retain_count==3, '3 instances');
+    RetainRelease.retain_count = 0; original = {one:new RetainRelease(), two:new RetainRelease(), three:new RetainRelease()};
+    ok(RetainRelease.retain_count==3, '3 instances');
     copy = _.own(original, {properties:true});
-    ok(CloneDestroy.retain_count==6, '6 instances');
+    ok(RetainRelease.retain_count==6, '6 instances');
     _.disown(original, {properties:true}); _.disown(copy, {properties:true});
-    ok(CloneDestroy.retain_count==0, '0 instances');
+    ok(RetainRelease.retain_count==0, '0 instances');
 
-    CloneDestroy.clone_count = 0; original = {one:new RetainRelease(), two:new RetainRelease(), three:new RetainRelease()};
+    RetainRelease.clone_count = 0; original = {one:new RetainRelease(), two:new RetainRelease(), three:new RetainRelease()};
     _.disown(original, {properties:true, clear:true});
     ok(_.size(original)==3, '3 instances');
   });
