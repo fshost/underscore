@@ -372,15 +372,16 @@
     if (_.isArray(obj)) {
       if (options.clear_values) { each(obj, function(value, index) { _.disown(value); obj[index]=null; }); return obj; }
       else { 
-        each(obj, function(value) { _.disown(value); })
+        each(obj, function(value) { _.disown(value); });
         obj.length=0; return obj; 
       }
     }
     else if (options.properties) {
       if (options.clear_values) { each(obj, function(value, key) { _.disown(value); obj[key]=null; }); return obj; }
       else { 
-        each(obj, function(value) { _.disown(value); })
-        for(key in obj) { delete obj[key] }; return obj; 
+        each(obj, function(value) { _.disown(value); });
+        for(key in obj) { delete obj[key]; }
+        return obj; 
       }
     }
     else if (obj.release) obj.release();
