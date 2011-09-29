@@ -999,6 +999,11 @@
     return _.CONVERT_NONE;
   };
 
+  // Helper to checks if a conversion is available including being the actual type
+  _.isConvertible = function(obj, key) {
+    return (_.conversionPath(obj, key)>0);
+  };
+
   // Converts from one time to another using a string, keypath or constructor if it can find a conversion path.
   _.toType = function(obj, key) {
     var keypath_components = _.isArray(key) ? key : (_.isString(key) ? key.split('.') : undefined);
@@ -1125,21 +1130,58 @@
   // object has a toJSON function, it will use it rather than the raw object.
   // <br />**Options:**<br />
   //* `properties` - used to disambigate between owning a collection's items and cloning a collection.
+  //* `included` - can provide an array to include values or keys.
+  //* `excluded` - can provide an array to exclude values or keys.
   _.toJSON = function(obj, options) {
+    // Simple type - exit quickly
+    if (!obj || (typeof(obj)!=='object')) return obj;
+
+    options||(options={});
     var result;
     if (_.isArray(obj)) {
-      result = [];
-      each(obj, function(value) { result.push(_.toJSON(value)); });
-      return result;
-    }
-    else if (obj instanceof Object) {
-      if(obj.toJSON) return obj.toJSON();
-      else if(options && options.properties) {
+      if (options.included) {
+        var items;
+        if (options.excluded) items = _.difference(options.included, options.excluded);
+        else items = options.included;
         result = {};
-        each(obj, function(value, key) { result[key] = _.toJSON(value); });
+        each(items, function(item) { if (_.contains(obj, item)) result.push(_.toJSON(item)); });
+        return result;
+      }
+      else if (options.excluded) {
+        result = [];
+        each(obj, function(value) { if (!_.contains(options.excluded, value)) result.push(_.toJSON(value)); });
+        return result;
+      }
+      else {
+        result = [];
+        each(obj, function(value) { result.push(_.toJSON(value)); });
         return result;
       }
     }
+    else {
+      if(obj.toJSON) return obj.toJSON();
+      else if(options.properties) {
+        if (options.included) {
+          var keys;
+          if (options.excluded) keys = _.difference(options.included, options.excluded);
+          else keys = options.included;
+          result = {};
+          each(keys, function(key) { if (obj.hasOwnProperty(key)) result[key] = _.toJSON(obj[key]); });
+          return result;
+        }
+        else if (options.excluded) {
+          result = {};
+          each(obj, function(value, key) { if (!_.contains(options.excluded, key)) result[key] = _.toJSON(value); });
+          return result;
+        }
+        else {
+          result = {};
+          each(obj, function(value, key) { result[key] = _.toJSON(value); });
+          return result;
+        }
+      }
+    }
+    
     return obj;
   };
 

@@ -77,6 +77,26 @@ $(document).ready(function() {
     ok(_.isEqual(result[0],object), 'serialized object 1 isEqual');
     ok(_.isEqual(result[1],object), 'serialized object 2 isEqual');
     ok(_.isEqual(result[2],object), 'serialized object 3 isEqual');
+
+    result = _.toJSON(array, {excluded: [some_class]});
+    ok(result.length===0, 'everything excluded');
+    result = _.toJSON(array, {excluded: [null]});
+    ok(result.length===3, 'nothing excluded');
+    
+    result = _.toJSON(object, {properties: true, excluded: ['int_value', 'date_value']});
+    ok(_.size(result)===2, 'two excluded');
+    ok(!result.hasOwnProperty('int_value'), 'int_value excluded');
+    ok(!result.hasOwnProperty('date_value'), 'date_value excluded');
+
+    result = _.toJSON(object, {properties: true, included: ['int_value', 'date_value']});
+    ok(_.size(result)===2, 'two included');
+    ok(result.hasOwnProperty('int_value'), 'int_value included');
+    ok(result.hasOwnProperty('date_value'), 'date_value included');
+
+    result = _.toJSON(object, {properties: true, included: ['int_value', 'date_value'], excluded: ['date_value', 'bob']});
+    ok(_.size(result)===1, 'two included but one excluded == 1');
+    ok(result.hasOwnProperty('int_value'), 'int_value included');
+    ok(!result.hasOwnProperty('date_value'), 'date_value excluded');
   });
 
   test("extensions: parseJSON", function() {
