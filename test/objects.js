@@ -284,6 +284,23 @@ $(document).ready(function() {
     ok(subclass.usefulness===42, 'very meaningful');
   });
 
+  test("objects: classOf", function() {
+    Superclass = (function() {
+      function Superclass() {}
+      return Superclass;
+    })();
+    var superclass = new Superclass();
+    equal(_.classOf(superclass), 'Superclass', 'it is a Superclass');
+
+    Subclass = (function() {
+      __extends(Subclass, Superclass);
+      function Subclass() {}
+      return Subclass;
+    })();
+    var subclass = new Subclass();
+    equal(_.classOf(subclass), 'Subclass', 'it is a Subclass');
+  });
+
   test("objects: isConstructor", function() {
     ok(!_.isConstructor(function() {}), 'a plain old function is not a constructor');
     

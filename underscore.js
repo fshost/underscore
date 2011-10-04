@@ -1049,6 +1049,14 @@
     return super_function ? super_function.apply(object, args) : undefined;
   };
 
+  // Returns the class of an object, if it exists.
+  _.classOf = function(object) {
+    if (!(object instanceof Object)) return undefined;
+    if (_.keypathExists(object, ['prototype', 'constructor', 'name'])) return object.prototype.constructor.name;
+    else if (_.keypathExists(object, ['constructor', 'name'])) return object.constructor.name;
+    return undefined;
+  };
+
   // Is a given array or object empty?
   _.isEmpty = function(obj) {
     if (_.isArray(obj) || _.isString(obj)) return obj.length === 0;
