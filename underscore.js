@@ -627,7 +627,7 @@
     // See the Harmony `egal` proposal: http://wiki.ecmascript.org/doku.php?id=harmony:egal.
     if (a === b) return a !== 0 || 1 / a == 1 / b;
     // A strict comparison is necessary because `null == undefined`.
-    if (a == null) return a === b;
+    if ((a == null) || (b == null)) return a === b;
     // Either one is undefined
     if ((a === void 0) || (b === void 0)) return false;
     // Unwrap any wrapped objects.
